@@ -25,12 +25,12 @@ def _client() -> OpenAI:
     # Official OpenAI Python SDK (new style)
     return OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-
 def safe_json_loads(text: str) -> Any:
     """
     Best-effort JSON parsing:
     - trims code fences
     - extracts first {...} or [...] block if model includes extra text
+    - removes trailing commas before } or ] (common model formatting error)
     """
     if not text:
         raise ValueError("Empty response; cannot parse JSON.")
@@ -42,7 +42,6 @@ def safe_json_loads(text: str) -> Any:
     cleaned = re.sub(r"\s*```$", "", cleaned)
 
     # If there's extra text, try to extract the first JSON object/array
-    # This is heuristic; structured prompting should make it unnecessary, but helps robustness.
     first_obj = None
     for pattern in [r"(\{.*\})", r"(\[.*\])"]:
         m = re.search(pattern, cleaned, flags=re.DOTALL)
@@ -50,6 +49,10 @@ def safe_json_loads(text: str) -> Any:
             first_obj = m.group(1)
             break
     candidate = first_obj if first_obj else cleaned
+
+    # --- NEW: remove trailing commas like ",}" or ",]"
+    # This is a pragmatic repair for common LLM JSON mistakes.
+    candidate = re.sub(r",\s*(\}|\])", r"\1", candidate)
 
     return json.loads(candidate)
 
