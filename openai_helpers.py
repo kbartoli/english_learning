@@ -83,7 +83,7 @@ Guidelines:
       "sentence_en": "<string>",
       "explanation_pl": {{
         "translation_pl": "<string>",
-        "key_vocab_pl": ["<string>", "..."],
+        "key_vocab_pl": ["<string in English> - <string in Polish>", "..."],
         "grammar_note_pl": "<string>",
         "variation_en": "<string>"
       }},
